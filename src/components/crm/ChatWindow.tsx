@@ -24,15 +24,29 @@ export function ChatWindow({
   error?: string | undefined;
 }) {
   const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const nearBottomRef = useRef(true);
+
+  // Only auto-scroll when the reader is already at the bottom, so polling
+  // updates never yank them away from older messages they are reading.
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" });
+    if (nearBottomRef.current) endRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);
 
   let lastDay = "";
 
   return (
-    <div className="scroll-slim flex-1 overflow-y-auto px-6 py-5">
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className="scroll-slim flex-1 overflow-y-auto px-6 py-5"
+    >
       {error && (
         <p className="mx-auto max-w-md rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-center text-sm text-destructive-foreground">
           {error}

@@ -43,7 +43,7 @@ export function ChatWindow({
       )}
       {!error && !isLoading && messages.length === 0 && (
         <p className="text-center text-sm text-muted-foreground">
-          No messages recorded for this lead yet.
+          No messages yet
         </p>
       )}
 

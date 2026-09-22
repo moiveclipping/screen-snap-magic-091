@@ -100,7 +100,11 @@ function Dashboard() {
         <ConversationList
           leads={filtered}
           isLoading={leadsQuery.isLoading}
-          error={leadsQuery.error ? "Lead data source is not reachable." : undefined}
+          error={
+            leadsQuery.error && leads.length === 0
+              ? "Lead data source is not reachable."
+              : undefined
+          }
           query={query}
           onQueryChange={setQuery}
           selectedId={selectedId}
@@ -124,9 +128,13 @@ function Dashboard() {
                 <ClientPanel lead={selected} />
               </div>
               <ChatWindow
-                messages={chatQuery.data ?? []}
+                messages={messages}
                 isLoading={chatQuery.isLoading}
-                error={chatQuery.error ? "Chat history could not be loaded." : undefined}
+                error={
+                  chatQuery.error && messages.length === 0
+                    ? "Chat history could not be loaded."
+                    : undefined
+                }
               />
               <Composer disabled />
               {detailsOpen && (

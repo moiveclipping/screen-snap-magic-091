@@ -16,8 +16,18 @@ async function apiGet(params: Record<string, string>): Promise<Row[]> {
   const url = new URL(BASE_API);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
-  const res = await fetch(url.toString(), { redirect: "follow" });
-  if (!res.ok) throw new Error(`CRM API request failed (${res.status})`);
+  // Apps Script intermittently answers its own redirect target with 404/429,
+  // so retry a couple of times before surfacing a failure.
+  let res: Response | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(url.toString(), {
+      redirect: "follow",
+      headers: { accept: "application/json,text/plain,*/*" },
+    });
+    if (res.ok) break;
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+  }
+  if (!res || !res.ok) throw new Error(`CRM API request failed (${res?.status ?? "no response"})`);
 
   const text = await res.text();
   let data: unknown;

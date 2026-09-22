@@ -50,8 +50,8 @@ function Dashboard() {
 
   // Deduplicate by lead_id so repeated API records never render twice.
   const leads = useMemo(() => {
-    const byId = new Map<string, (typeof rows)[number]>();
     const rows = leadsQuery.data ?? [];
+    const byId = new Map<string, Lead>();
     for (const l of rows) byId.set(l.lead_id, l);
     return [...byId.values()];
   }, [leadsQuery.data]);

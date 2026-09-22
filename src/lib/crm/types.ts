@@ -38,5 +38,8 @@ export type ChatMessage = {
   timestamp: string;
 };
 
-export const isCustomer = (sender: string) =>
-  sender.trim().toLowerCase() === "customer";
+/** Sender-based alignment only: "costumer"/"customer" left, "AI BOT" right. */
+export const isCustomer = (sender: string) => {
+  const s = sender.trim().toLowerCase();
+  return s === "customer" || s === "costumer";
+};

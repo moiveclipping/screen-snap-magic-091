@@ -21,7 +21,7 @@ export function ChatWindow({
 }: {
   messages: ChatMessage[];
   isLoading: boolean;
-  error?: string;
+  error?: string | undefined;
 }) {
   const endRef = useRef<HTMLDivElement>(null);
 

@@ -23,7 +23,7 @@ export function ConversationList({
 }: {
   leads: Lead[];
   isLoading: boolean;
-  error?: string;
+  error?: string | undefined;
   query: string;
   onQueryChange: (v: string) => void;
   selectedId: string | null;

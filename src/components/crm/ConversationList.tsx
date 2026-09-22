@@ -30,7 +30,7 @@ export function ConversationList({
   onSelect: (id: string) => void;
 }) {
   return (
-    <aside className="flex w-[340px] shrink-0 flex-col border-r border-border bg-surface">
+    <aside className="flex h-full w-full shrink-0 flex-col border-r border-border bg-surface md:w-[280px] lg:w-[340px]">
       <div className="border-b border-border px-4 py-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold tracking-tight">Conversations</span>
@@ -48,7 +48,7 @@ export function ConversationList({
         {error && <p className="p-4 text-sm text-destructive">{error}</p>}
         {!error && isLoading && <p className="p-4 text-sm text-muted-foreground">Loading leads…</p>}
         {!error && !isLoading && leads.length === 0 && (
-          <p className="p-4 text-sm text-muted-foreground">No leads match this view.</p>
+          <p className="p-4 text-sm text-muted-foreground">No conversations yet.</p>
         )}
 
         {leads.map((lead) => {

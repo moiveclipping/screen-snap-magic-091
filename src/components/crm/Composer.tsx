@@ -1,11 +1,20 @@
 import { useState } from "react";
+import { Paperclip, SendHorizontal } from "lucide-react";
 
 export function Composer({ disabled }: { disabled: boolean }) {
   const [value, setValue] = useState("");
 
   return (
-    <div className="border-t border-border bg-surface px-6 py-4">
-      <div className="mx-auto flex max-w-3xl items-end gap-3">
+    <div className="shrink-0 border-t border-border bg-surface px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 md:px-6 md:pb-4">
+      <div className="mx-auto flex max-w-3xl items-end gap-2">
+        <button
+          type="button"
+          disabled
+          aria-label="Attach file"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Paperclip className="size-[18px]" />
+        </button>
         <textarea
           rows={1}
           value={value}
@@ -17,15 +26,12 @@ export function Composer({ disabled }: { disabled: boolean }) {
         <button
           type="button"
           disabled
-          title="Outbound messaging will be enabled with the messaging API"
-          className="h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Send message"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Send
+          <SendHorizontal className="size-[18px]" />
         </button>
       </div>
-      <p className="mx-auto mt-2 max-w-3xl text-[11px] text-muted-foreground">
-        Read-only view. Outbound sending will be wired to the messaging API.
-      </p>
     </div>
   );
 }

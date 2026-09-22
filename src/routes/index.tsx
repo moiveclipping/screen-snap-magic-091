@@ -3,10 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { fetchChat, fetchLeads } from "@/lib/crm/crm.functions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ConversationList } from "@/components/crm/ConversationList";
 import { ClientPanel } from "@/components/crm/ClientPanel";
 import { ChatWindow } from "@/components/crm/ChatWindow";
 import { Composer } from "@/components/crm/Composer";
+import { MobileChatHeader } from "@/components/crm/MobileChatHeader";
+import { DetailsDrawer } from "@/components/crm/DetailsDrawer";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,7 +18,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Dark CRM workspace to review AI lead conversations, client details, follow-up status and appointments in one place.",
+          "Mobile-first dark CRM to review AI lead conversations, client details, follow-up status and appointments.",
       },
       { property: "og:title", content: "Lead Desk — AI Follow-up CRM" },
       {
@@ -33,8 +36,10 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const getLeads = useServerFn(fetchLeads);
   const getChat = useServerFn(fetchChat);
+  const isMobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const leadsQuery = useQuery({ queryKey: ["leads"], queryFn: () => getLeads() });
   const leads = leadsQuery.data ?? [];
@@ -47,11 +52,13 @@ function Dashboard() {
     );
   }, [leads, query]);
 
+  // Desktop auto-selects the first conversation; mobile starts on the list screen.
   useEffect(() => {
-    if (!selectedId && filtered.length > 0) setSelectedId(filtered[0]!.lead_id);
-  }, [filtered, selectedId]);
+    if (!isMobile && !selectedId && filtered.length > 0) setSelectedId(filtered[0]!.lead_id);
+  }, [filtered, selectedId, isMobile]);
 
   const selected = leads.find((l) => l.lead_id === selectedId) ?? null;
+  const showChatScreen = isMobile ? !!selected : true;
 
   const chatQuery = useQuery({
     queryKey: ["chat", selectedId],
@@ -59,42 +66,64 @@ function Dashboard() {
     enabled: !!selectedId,
   });
 
-  return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
-      <ConversationList
-        leads={filtered}
-        isLoading={leadsQuery.isLoading}
-        error={leadsQuery.error ? "Lead data source is not reachable." : undefined}
-        query={query}
-        onQueryChange={setQuery}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-      />
+  const closeChat = () => {
+    setDetailsOpen(false);
+    setSelectedId(null);
+  };
 
-      <main className="flex min-w-0 flex-1 flex-col">
-        {selected ? (
-          <>
-            <ClientPanel lead={selected} />
-            <ChatWindow
-              messages={chatQuery.data ?? []}
-              isLoading={chatQuery.isLoading}
-              error={chatQuery.error ? "Chat history could not be loaded." : undefined}
-            />
-            <Composer disabled />
-          </>
-        ) : (
-          <div className="flex flex-1 items-center justify-center px-8 text-center">
-            <div className="max-w-md">
-              <h1 className="text-lg font-semibold">Lead Desk</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {leadsQuery.isLoading
-                  ? "Loading leads…"
-                  : "Connect your lead sheet to start reviewing conversations. Select a conversation on the left once data is available."}
-              </p>
+  return (
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
+      {(!isMobile || !showChatScreen) && (
+        <ConversationList
+          leads={filtered}
+          isLoading={leadsQuery.isLoading}
+          error={leadsQuery.error ? "Lead data source is not reachable." : undefined}
+          query={query}
+          onQueryChange={setQuery}
+          selectedId={selectedId}
+          onSelect={(id) => {
+            setSelectedId(id);
+            setDetailsOpen(false);
+          }}
+        />
+      )}
+
+      {showChatScreen && (
+        <main className="flex min-w-0 flex-1 flex-col">
+          {selected ? (
+            <>
+              <MobileChatHeader
+                lead={selected}
+                onBack={closeChat}
+                onDetails={() => setDetailsOpen(true)}
+              />
+              <div className="hidden md:block">
+                <ClientPanel lead={selected} />
+              </div>
+              <ChatWindow
+                messages={chatQuery.data ?? []}
+                isLoading={chatQuery.isLoading}
+                error={chatQuery.error ? "Chat history could not be loaded." : undefined}
+              />
+              <Composer disabled />
+              {detailsOpen && (
+                <DetailsDrawer lead={selected} onClose={() => setDetailsOpen(false)} />
+              )}
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center px-8 text-center">
+              <div className="max-w-md">
+                <h1 className="text-lg font-semibold">Lead Desk</h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {leadsQuery.isLoading
+                    ? "Loading conversations…"
+                    : "Select a conversation to see the lead's details and chat history."}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      )}
     </div>
   );
 }

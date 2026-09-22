@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { fetchChat, fetchLeads } from "@/lib/crm/crm.functions";
+import type { ChatMessage, Lead } from "@/lib/crm/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ConversationList } from "@/components/crm/ConversationList";
 import { ClientPanel } from "@/components/crm/ClientPanel";
@@ -76,7 +77,17 @@ function Dashboard() {
     queryKey: ["chat", selectedId],
     queryFn: () => getChat({ data: { leadId: selectedId! } }),
     enabled: !!selectedId,
+    refetchInterval: selectedId ? 5_000 : false,
+    refetchIntervalInBackground: true,
   });
+
+  // Deduplicate by message_id so refetches never render the same message twice.
+  const messages = useMemo(() => {
+    const rows = chatQuery.data ?? [];
+    const byId = new Map<string, ChatMessage>();
+    rows.forEach((m, i) => byId.set(m.message_id || `${i}-${m.timestamp}-${m.message}`, m));
+    return [...byId.values()];
+  }, [chatQuery.data]);
 
   const closeChat = () => {
     setDetailsOpen(false);

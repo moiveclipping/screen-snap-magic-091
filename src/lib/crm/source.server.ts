@@ -50,7 +50,7 @@ async function fetchSheet(url: string | undefined): Promise<Record<string, strin
   if (!res.ok) throw new Error(`Sheet request failed (${res.status})`);
   const rows = parseCsv(await res.text());
   if (rows.length < 2) return [];
-  const headers = rows[0].map(normalize);
+  const headers = (rows[0] ?? []).map(normalize);
   return rows.slice(1).map((r) => {
     const obj: Record<string, string> = {};
     headers.forEach((h, i) => (obj[h] = (r[i] ?? "").trim()));

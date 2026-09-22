@@ -41,8 +41,20 @@ function Dashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const leadsQuery = useQuery({ queryKey: ["leads"], queryFn: () => getLeads() });
-  const leads = leadsQuery.data ?? [];
+  const leadsQuery = useQuery({
+    queryKey: ["leads"],
+    queryFn: () => getLeads(),
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: true,
+  });
+
+  // Deduplicate by lead_id so repeated API records never render twice.
+  const leads = useMemo(() => {
+    const byId = new Map<string, (typeof rows)[number]>();
+    const rows = leadsQuery.data ?? [];
+    for (const l of rows) byId.set(l.lead_id, l);
+    return [...byId.values()];
+  }, [leadsQuery.data]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
